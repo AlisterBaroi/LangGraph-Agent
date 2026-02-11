@@ -7,41 +7,56 @@ This project is to demo a basic AI Agent using [LangGraph](https://www.langchain
 <!-- ![LangGraph Logo](https://miro.medium.com/v2/0*je-yj93ERqG0BEoQ.png) -->
 
 ## Prerequisites 
-The is project uses Google Gemini as the base LLM and depends on Gemini API Key for integration. Visit [Google AI Studio](https://aistudio.google.com/api-keys) to generate an API key.
+The project uses Google Gemini as the base LLM and depends on Gemini API Key for integration. Visit [Google AI Studio](https://aistudio.google.com/api-keys) to generate an API key.
 
 
 > [!IMPORTANT]  
-> Make sure to copy-paste the `.env.local` file, renaming it as `.env` and paste the API key for the `GOOGLE_API_KEY` variable, no need to add quotations (""). The `.env` file should look something like this:
-> ```env
+> Make sure to copy the `.env.local` file, renaming it as `.env` and paste-in the API key for the `GOOGLE_API_KEY` variable, no need to add quotations (""). The `.env` file should look something like:
+> ```sh
 > GOOGLE_API_KEY=AIzasYc4 .... ashIU
 > ``` 
 
 ## Setup
 1. Clone the GitHub repo, open IDE and cd into the project:
-    ```python
+    ```sh
     git clone https://github.com/AlisterBaroi/LangGraph-Agent.git
     cd LangGraph-Agent
-    # Make sure you're in the project folder 
-    pwd 
+    # Make sure you are in the project folder 
+    pwd # Linux cmd
     ```
 
-2. Create a virtual enviornment (named env) for the python project:
-    ```python
-    python -m venv env
+2. Create a virtual environment (named env) for the python project:
+    ```sh
+    python -m venv ENV
     # or use the following for linux:
-    # python -m venv venv
+    # python -m venv ENV
+    ```
+    Optional: If the virtual environment doesn't open by default in IDE/terminal, use the following command:
+    ```sh
+    # For Mac/Linux
+    source ENV/bin/activate
+    
+    # For Windows
+    ENV\Scripts\activate
     ```
 
 3. Install the required dependencies:
-    ```python
+    ```sh
     pip install -r requirements.txt
     ```
 
 
 ## Demo
-To demo the project, just run the `app.py` file while in the virtual enviornment:
-```python
+To demo the project, just run the `app.py` file while in the virtual environment:
+```sh
 python app.py
 # or 
 # python3 app.py
 ```
+
+## Clean up
+To clean-up the project deactivate the virtual environment and delete it:
+```sh
+deactivate # Deactivate virtual environment
+rm -r -f ENV/ # delete virtual environment (Linux cmd)
+``` 
