@@ -21,6 +21,7 @@ The project uses Google Gemini as the base LLM and depends on Gemini API Key for
     ```sh
     git clone https://github.com/AlisterBaroi/LangGraph-Agent.git
     cd LangGraph-Agent
+    
     # Make sure you are in the project folder 
     pwd # Linux cmd
     ```
@@ -45,20 +46,24 @@ The project uses Google Gemini as the base LLM and depends on Gemini API Key for
 
 
 ## Demo
-To demo the project with Web UI, run the stremlit command to execute `app.py` file while in the virtual environment:
+To demo the project with Web UI, run the streamlit command to execute `app.py` file while in the virtual environment:
 ```sh
 streamlit run app.py
 ```
 For the standalone agent, run `agent.py` file while in the virtual environment:
 ```sh
-python app.py
+python agent.py
 # or 
-# python3 app.py
+# python3 agent.py
 ```
 
 ## Clean up
-To clean-up the project deactivate the virtual environment and delete it:
+To clean-up the project, deactivate the virtual environment and delete it:
 ```sh
 deactivate # Deactivate virtual environment
-rm -r -f ENV/ # delete virtual environment (for Mac/Linux)
+
+# delete virtual environment
+rm -r -f ENV/   # (for Mac/Linux)
+rd /s /q ENV    # (for Windows CMD)
+rm -rf ENV      # (for Windows PowerShell)
 ``` 
