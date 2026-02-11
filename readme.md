@@ -17,7 +17,7 @@ The project uses Google Gemini as the base LLM and depends on Gemini API Key for
 > ``` 
 
 ## Setup
-1. Clone the GitHub repo, open IDE and cd into the project:
+1. Clone the GitHub repo, cd into the project, and open in IDE:
     ```sh
     git clone https://github.com/AlisterBaroi/LangGraph-Agent.git
     cd LangGraph-Agent
@@ -25,11 +25,9 @@ The project uses Google Gemini as the base LLM and depends on Gemini API Key for
     pwd # Linux cmd
     ```
 
-2. Create a virtual environment (named env) for the python project:
+2. Create a virtual environment (named ENV) for the python project:
     ```sh
     python -m venv ENV
-    # or use the following for linux:
-    # python -m venv ENV
     ```
     Optional: If the virtual environment doesn't open by default in IDE/terminal, use the following command:
     ```sh
@@ -47,7 +45,11 @@ The project uses Google Gemini as the base LLM and depends on Gemini API Key for
 
 
 ## Demo
-To demo the project, just run the `app.py` file while in the virtual environment:
+To demo the project with Web UI, run the stremlit command to execute `app.py` file while in the virtual environment:
+```sh
+streamlit run app.py
+```
+For the standalone agent, run `agent.py` file while in the virtual environment:
 ```sh
 python app.py
 # or 
@@ -58,5 +60,5 @@ python app.py
 To clean-up the project deactivate the virtual environment and delete it:
 ```sh
 deactivate # Deactivate virtual environment
-rm -r -f ENV/ # delete virtual environment (Linux cmd)
+rm -r -f ENV/ # delete virtual environment (for Mac/Linux)
 ``` 
