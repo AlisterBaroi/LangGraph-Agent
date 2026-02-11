@@ -1,8 +1,8 @@
-<img src="https://miro.medium.com/v2/1*_zS2qyJ-rDFe1w3P37w2ag.png"  width="300" align="right" title="LangGraph" alt="LangGraph Logo" >
 
 # LangGraph AI Agent
 This project is to demo a basic AI Agent using [LangGraph](https://www.langchain.com/langgraph), the open-source tool by LangChain designed to build stateful, multi-actor applications by modeling AI workflows as cyclical graphs, allowing for complex loops, decision-making, and persistent memory.
 
+<img src="https://miro.medium.com/v2/1*_zS2qyJ-rDFe1w3P37w2ag.png"  width="300" align="right" title="LangGraph" alt="LangGraph Logo" >
 <!-- ![LangGraph Logo](https://miro.medium.com/v2/0*je-yj93ERqG0BEoQ.png) -->
 
 ## Prerequisites 
