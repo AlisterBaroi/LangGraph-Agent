@@ -4,7 +4,7 @@ This project is to demo a basic AI Agent using [LangGraph](https://www.langchain
 
 
 <!-- ![LangGraph Logo](https://miro.medium.com/v2/0*je-yj93ERqG0BEoQ.png) -->
-<img src="https://miro.medium.com/v2/0*je-yj93ERqG0BEoQ.png"  width="300" align="right" title="LangGraph" alt="LangGraph Logo" >
+<img src="https://miro.medium.com/v2/0*je-yj93ERqG0BEoQ.png"  width="250" align="right" title="LangGraph" alt="LangGraph Logo" >
 
 ## Prerequisites 
 The is project uses Google Gemini as the base LLM and depends on Gemini API Key for integration. Visit [Google AI Studio](https://aistudio.google.com/api-keys) to generate an API key.
