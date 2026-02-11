@@ -20,6 +20,7 @@ The is project uses Google Gemini as the base LLM and depends on Gemini API Key 
 1. Clone the GitHub repo, open IDE and cd into the project:
     ```python
     git clone https://github.com/AlisterBaroi/LangGraph-Agent.git
+    cd LangGraph-Agent
     # Make sure you're in the project folder 
     pwd 
     ```
