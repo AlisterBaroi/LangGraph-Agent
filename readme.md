@@ -1,10 +1,10 @@
 
 # LangGraph AI Agent
+<img src="https://miro.medium.com/v2/0*je-yj93ERqG0BEoQ.png"  width="250" align="right" title="LangGraph" alt="LangGraph Logo" >
 This project is to demo a basic AI Agent using [LangGraph](https://www.langchain.com/langgraph), the open-source tool by LangChain designed to build stateful, multi-actor applications by modeling AI workflows as cyclical graphs, allowing for complex loops, decision-making, and persistent memory.
 
 
 <!-- ![LangGraph Logo](https://miro.medium.com/v2/0*je-yj93ERqG0BEoQ.png) -->
-<img src="https://miro.medium.com/v2/0*je-yj93ERqG0BEoQ.png"  width="250" align="right" title="LangGraph" alt="LangGraph Logo" >
 
 ## Prerequisites 
 The is project uses Google Gemini as the base LLM and depends on Gemini API Key for integration. Visit [Google AI Studio](https://aistudio.google.com/api-keys) to generate an API key.
