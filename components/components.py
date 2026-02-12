@@ -79,7 +79,8 @@ def promptFunc():
                         st.image(file, caption=file.name, width=300)
                     # PDF logic
                     elif file_type == "application/pdf":
-                        st.markdown(f"### `{file.name}`")
+                        st.write(f"***:green[{file.name}]***")
+                        # st.markdown(f"### `{file.name}`")
                         # Display uploaded pdf file
                         display_pdf(file)
 
