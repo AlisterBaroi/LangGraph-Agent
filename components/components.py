@@ -1,4 +1,26 @@
 import streamlit as st
+import base64
+
+
+@st.dialog(" ", width="small")
+def welcomeDialogue():
+    st.header("LangGraph AI Agent -- :red[Gemini]", text_alignment="center")
+    st.write(f"Why is your favorite?")
+
+
+# Helper function to display a PDF in Streamlit using an iframe.
+def display_pdf(file):
+    # 1. Read the file as bytes
+    bytes_data = file.getvalue()
+
+    # 2. Encode bytes to base64 so it can be embedded in HTML
+    base64_pdf = base64.b64encode(bytes_data).decode("utf-8")
+
+    # 3. Create the HTML iframe (width/height control the viewer size)
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
+
+    # 4. Render the HTML
+    st.markdown(pdf_display, unsafe_allow_html=True)
 
 
 def promptFunc():
@@ -57,7 +79,9 @@ def promptFunc():
                         st.image(file, caption=file.name, width=300)
                     # PDF logic
                     elif file_type == "application/pdf":
-                        st.markdown(f"### 📑 PDF Attached: `{file.name}`")
+                        st.markdown(f"### `{file.name}`")
+                        # Display uploaded pdf file
+                        display_pdf(file)
 
         # 3. Return the payload so app.py can pass it to the agent
         return user_message
