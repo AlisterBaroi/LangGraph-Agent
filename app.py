@@ -56,6 +56,7 @@ from agent import app  # Import the compiled graph
 checkAPIKey(streamlit=True)
 
 st.set_page_config(page_title="LangGraph AI Agent", page_icon="🤖", layout="centered")
+# Page title
 st.subheader(
     "LangGraph AI Agent -- :red[Gemini]", anchor=False, text_alignment="center"
 )
