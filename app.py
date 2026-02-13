@@ -9,7 +9,11 @@ checkAPIKey(streamlit=True)
 st.set_page_config(page_title="LangGraph AI Agent", page_icon="👋", layout="centered")
 
 # Page title
-st.header("LangGraph AI Agent -- :red[Gemini]", text_alignment="center")
+st.subheader("LangGraph AI Agent -- :red[Gemini]", text_alignment="center")
+st.write(
+    "I'm a :red[Web Search Agent]. I can use search to find information for you. Ask me to web search on any topic."
+)
+st.divider()
 
 
 def main():
