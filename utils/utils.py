@@ -1,4 +1,4 @@
-import os
+import os, base64
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -12,3 +12,13 @@ def checkAPIKey(streamlit: bool) -> str:
         print(exc)
         return st.write(Exception(exc)) if streamlit else exit()
     print("GOOGLE_API_KEY verified!")
+
+
+# Display a PDF in an HTML iframe.
+def display_pdf(file):
+    bytes_data = file.getvalue()  # Read the file as bytes
+    # Encode bytes to base64 so it can be embedded in HTML
+    base64_pdf = base64.b64encode(bytes_data).decode("utf-8")
+    # Create the HTML iframe (width/height control the viewer size)
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
+    st.markdown(pdf_display, unsafe_allow_html=True)  # Render the HTML
