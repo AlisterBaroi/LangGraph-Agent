@@ -95,7 +95,7 @@ from langgraph.prebuilt import ToolNode
 import datetime
 
 # Check Gemini API Key
-checkAPIKey()
+checkAPIKey(streamlit=False)
 
 
 # --- 1. Define Tools ---

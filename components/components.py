@@ -2,6 +2,12 @@ import streamlit as st
 from utils.utils import display_pdf
 
 
+@st.dialog(" ", width="small")
+def welcomeDialogue():
+    st.header("LangGraph AI Agent -- :red[Gemini]", text_alignment="center")
+    st.write(f"Why is your favorite?")
+
+
 # User prompt input with file uploads (image/PDF) & audio recordings
 def promptFunc():
     prompt = st.chat_input(  # init prompt UI
