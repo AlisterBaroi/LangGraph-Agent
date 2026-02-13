@@ -102,8 +102,8 @@ checkAPIKey(streamlit=False)
 @tool
 def web_search(query: str):
     """
-    Finds information on the internet using DuckDuckGo.
-    Useful for finding current events, stock prices, news, and real-time information.
+    Finds information on the internet.
+    Useful for doing web search to get recent/real-time information.
     """
     print(f"\n--- [TOOL CALL] Web Search Query: '{query}' ---")
 
@@ -170,7 +170,7 @@ def chatbot(state: AgentState):
         2. Execute multiple searches to gather diverse perspectives on the topic.
         3. Synthesize the findings into a structured report: Summary, Key Findings, Detailed Analysis, and Conclusion.
         4. If information is conflicting, note the discrepancy and the different sources.
-        5 Use citation markers [1: link here], [2: link here] to reference findings (with links).
+        5. Use citation markers (e.g. [link here]) to reference findings (with links).
         
         Current Date and Time (for reference): {current_time}
         """
