@@ -144,9 +144,7 @@ class AgentState(TypedDict):
 
 
 # --- 3. Initialize Model ---
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash"
-)  # Updated to 2.0 Flash as you mentioned
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 llm_with_tools = llm.bind_tools(tools)
 
 # --- 4. Define Nodes ---
@@ -195,7 +193,8 @@ def chatbot(state: AgentState):
         )
         response.content = log_content
 
-    print(f"--- [AGENT NODE] LLM Response: {response.content[:100]}... ---")
+    # print(f"--- [AGENT NODE] LLM Response: {response.content[:100]}... ---")
+    print(f"--- [AGENT NODE] LLM Response: {response.content} ---")
     if response.tool_calls:
         print(
             f"--- [AGENT NODE] Agent decided to call tool: {response.tool_calls[0]['name']} ---"
