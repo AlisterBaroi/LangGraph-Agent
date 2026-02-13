@@ -203,7 +203,8 @@ def chatbot(state: AgentState):
     return {"messages": [response]}
 
 
-def should_continue(state: AgentState) -> Literal["tools", END]:
+# def should_continue(state: AgentState) -> Literal["tools", END]:
+def should_continue(state: AgentState) -> str:
     """Router to decide if we need to call a tool or end the conversation."""
     messages = state["messages"]
     last_message = messages[-1]
