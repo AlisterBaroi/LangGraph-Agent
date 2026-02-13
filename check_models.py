@@ -1,18 +1,14 @@
 import os
 from dotenv import load_dotenv
 from google import genai
+from utils.utils import checkAPIKey
 
-# 1. Load API Key
-load_dotenv()
-api_key = os.environ.get("GOOGLE_API_KEY")
-
-if not api_key:
-    print("❌ Error: GOOGLE_API_KEY not found in .env file.")
-    exit()
+# Check for API Key
+checkAPIKey(streamlit=False)
 
 # 2. Initialize Client
 try:
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
     print(f"--- 📡 Listing All Available Models ---")
 
     # 3. Simple List (No attribute filtering to avoid errors)
@@ -23,4 +19,4 @@ try:
         print(f"✅ Found: {model.name}")
 
 except Exception as e:
-    print(f"❌ Error: {e}")
+    print(f"Error: {e}")

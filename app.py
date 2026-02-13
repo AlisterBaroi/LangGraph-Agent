@@ -3,7 +3,7 @@ from utils.utils import checkAPIKey
 from components.components import promptFunc
 
 # Verify Gemini API key
-checkAPIKey()
+checkAPIKey(streamlit=True)
 
 # Page settings
 st.set_page_config(page_title="LangGraph AI Agent", page_icon="👋", layout="centered")

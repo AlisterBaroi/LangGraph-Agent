@@ -3,12 +3,12 @@ import streamlit as st
 from dotenv import load_dotenv
 
 
-# Check Gemini API Key & cache it
+# Check Gemini API Key & cache it (streamlit version)
 @st.cache_data
-def checkAPIKey() -> str:
+def checkAPIKey(streamlit: bool) -> str:
     load_dotenv()  # Load variables from .env
     if not os.environ.get("GOOGLE_API_KEY"):  # Check if API key exists
         exc = "GOOGLE_API_KEY Missing -> Please add GOOGLE_API_KEY for Gemini at './.env' file."
         print(exc)
-        return st.write(Exception(exc))
+        return st.write(Exception(exc)) if streamlit else exit()
     print("GOOGLE_API_KEY verified!")
