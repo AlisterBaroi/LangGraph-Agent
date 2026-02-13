@@ -145,7 +145,7 @@ class AgentState(TypedDict):
 
 # --- 3. Initialize Model ---
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash"
+    model="gemini-2.5-flash"
 )  # Updated to 2.0 Flash as you mentioned
 llm_with_tools = llm.bind_tools(tools)
 
@@ -165,12 +165,12 @@ def chatbot(state: AgentState):
 
     sys_msg = SystemMessage(
         content=f"""
-        You are a professional research assistant acting as a specialized search engine (when queried/intented by the users prompt to do web search, else just be a casual chat). Your goal is to provide deeply researched, structured answers.
+        You are a professional research assistant acting as a specialized search engine (when queried/intented by the users prompt to do web search, else just be a casual chat). Your goal is to provide deeply researched, structured answers in plain text.
         1. Analyze the user query and identify key entities and concepts.
         2. Execute multiple searches to gather diverse perspectives on the topic.
         3. Synthesize the findings into a structured report: Summary, Key Findings, Detailed Analysis, and Conclusion.
         4. If information is conflicting, note the discrepancy and the different sources.
-        5. Use citation markers (e.g. [link here]) to reference findings (with links).
+        5. Always use citation markers (e.g. [link here]) to reference findings (with links), do not hallucinate.
         
         Current Date and Time (for reference): {current_time}
         """
@@ -181,6 +181,19 @@ def chatbot(state: AgentState):
     messages = [sys_msg] + state["messages"]
 
     response = llm_with_tools.invoke(messages)
+
+    # Parse content blocks if response is a list
+    log_content = response.content
+    if isinstance(log_content, list):
+        # Extract text from the list of dicts
+        log_content = "".join(
+            [
+                block.get("text", "")
+                for block in log_content
+                if block.get("type") == "text"
+            ]
+        )
+        response.content = log_content
 
     print(f"--- [AGENT NODE] LLM Response: {response.content[:100]}... ---")
     if response.tool_calls:
