@@ -71,7 +71,7 @@ from ddgs import DDGS
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
-import datetime
+import os, datetime
 
 # For colors: https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
 from rich.console import Console
@@ -129,7 +129,7 @@ class AgentState(TypedDict):
 
 
 # --- 3. Initialize Model ---
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+llm = ChatGoogleGenerativeAI(model=os.environ.get("MODEL_NAME"))
 llm_with_tools = llm.bind_tools(tools)
 
 # --- 4. Define Nodes ---
@@ -141,7 +141,7 @@ def chatbot(state: AgentState):
     user_text = last_msg.content if hasattr(last_msg, "content") else str(last_msg)
 
     console.print(f"\n--- [AGENT NODE]->Processing Input:", style="chartreuse2")
-    print(f"`\n {user_text} + \n`")
+    print(f"`\n{user_text}\n`")
 
     # --- DYNAMIC SYSTEM PROMPT ---
     # We create the system message INSIDE the node so it always has the exact current time.
