@@ -1,65 +1,43 @@
 import streamlit as st
+from utils.utils import display_pdf
 
 
+@st.dialog(" ", width="small")
+def welcomeDialogue():
+    st.header("LangGraph AI Agent -- :red[Gemini]", text_alignment="center")
+    st.write(f"Why is your favorite?")
+
+
+# User prompt input with file uploads (image/PDF) & audio recordings
 def promptFunc():
-    # prompt = st.chat_input("Say something")
-
-    # if prompt:
-    #     st.write(f"User has sent the following prompt: {prompt}")
-
-    prompt = st.chat_input(
+    prompt = st.chat_input(  # init prompt UI
         "Say something and/or attach an image/pdf file or audio recording",
-        accept_file=True,
+        accept_file="multiple",
         file_type=["jpg", "jpeg", "png", "pdf"],
         accept_audio=True,
     )
-    # # Text input
-    # if prompt and prompt.text:
-    #     st.write(":orange[User:]", prompt.text)
-
-    # # Audio input
-    # if prompt and prompt.audio:
-    #     st.audio(prompt.audio)
-    #     st.write("Audio file:", prompt.audio.name)
-
-    # # Image/PDF input
-    # # if prompt and prompt["files"].type == "application/pdf":
-    # #     st.write(prompt["files"].name)
-
-    # if prompt and prompt["files"]:
-    #     st.image(prompt["files"][0])
     if prompt:
         # 1. Prepare the payload to return to your agent
         user_message = {
             "text": prompt.text,
-            "files": prompt.files,  # This is a list of UploadedFile objects
-            "audio": prompt.audio,  # This is a single UploadedFile object or None
+            "files": prompt.files,  # List of UploadedFile objects
+            "audio": prompt.audio,  # Single UploadedFile object or None
         }
-
-        # 2. Display the user's inputs immediately in the chat UI
+        # 2. Display user inputs immediately in chat UI
         with st.chat_message("user"):
-
-            # Display text if present
-            if prompt.text:
+            if prompt.text:  # Display text if present
                 st.write(prompt.text)
-
-            # Display audio if present
-            if prompt.audio:
+            if prompt.audio:  # Display audio if present
                 st.audio(prompt.audio)
                 st.caption("🎤 Audio recorded")
-
-            # Display files if present
-            if prompt.files:
+            if prompt.files:  # Display files if present
                 for file in prompt.files:
                     file_type = file.type
-                    # Image logic
-                    if file_type.startswith("image/"):
+                    if file_type.startswith("image/"):  # Image logic
                         st.image(file, caption=file.name, width=300)
-                    # PDF logic
-                    elif file_type == "application/pdf":
-                        st.markdown(f"### 📑 PDF Attached: `{file.name}`")
-
-        # 3. Return the payload so app.py can pass it to the agent
+                    elif file_type == "application/pdf":  # PDF logic
+                        st.write(f"📄 ***:green[{file.name}]***")
+                        display_pdf(file)
+        # 3. Return payload so app.py can pass it to agent
         return user_message
-
     return None

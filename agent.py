@@ -95,15 +95,15 @@ from langgraph.prebuilt import ToolNode
 import datetime
 
 # Check Gemini API Key
-checkAPIKey()
+checkAPIKey(streamlit=False)
 
 
 # --- 1. Define Tools ---
 @tool
 def web_search(query: str):
     """
-    Finds information on the internet using DuckDuckGo.
-    Useful for finding current events, stock prices, news, and real-time information.
+    Finds information on the internet.
+    Useful for doing web search to get recent/real-time information.
     """
     print(f"\n--- [TOOL CALL] Web Search Query: '{query}' ---")
 
@@ -144,9 +144,7 @@ class AgentState(TypedDict):
 
 
 # --- 3. Initialize Model ---
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash"
-)  # Updated to 2.0 Flash as you mentioned
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 llm_with_tools = llm.bind_tools(tools)
 
 # --- 4. Define Nodes ---
@@ -165,12 +163,12 @@ def chatbot(state: AgentState):
 
     sys_msg = SystemMessage(
         content=f"""
-        You are a professional research assistant acting as a specialized search engine (when queried/intented by the users prompt to do web search, else just be a casual chat). Your goal is to provide deeply researched, structured answers.
+        You are a professional research assistant acting as a specialized search engine (when queried/intented by the users prompt to do web search, else just be a casual chat). Your goal is to provide deeply researched, structured answers in plain text.
         1. Analyze the user query and identify key entities and concepts.
         2. Execute multiple searches to gather diverse perspectives on the topic.
         3. Synthesize the findings into a structured report: Summary, Key Findings, Detailed Analysis, and Conclusion.
         4. If information is conflicting, note the discrepancy and the different sources.
-        5 Use citation markers [1: link here], [2: link here] to reference findings (with links).
+        5. Always use citation markers (e.g. [link here]) to reference findings (with links), do not hallucinate.
         
         Current Date and Time (for reference): {current_time}
         """
@@ -182,7 +180,21 @@ def chatbot(state: AgentState):
 
     response = llm_with_tools.invoke(messages)
 
-    print(f"--- [AGENT NODE] LLM Response: {response.content[:100]}... ---")
+    # Parse content blocks if response is a list
+    log_content = response.content
+    if isinstance(log_content, list):
+        # Extract text from the list of dicts
+        log_content = "".join(
+            [
+                block.get("text", "")
+                for block in log_content
+                if block.get("type") == "text"
+            ]
+        )
+        response.content = log_content
+
+    # print(f"--- [AGENT NODE] LLM Response: {response.content[:100]}... ---")
+    print(f"--- [AGENT NODE] LLM Response: {response.content} ---")
     if response.tool_calls:
         print(
             f"--- [AGENT NODE] Agent decided to call tool: {response.tool_calls[0]['name']} ---"

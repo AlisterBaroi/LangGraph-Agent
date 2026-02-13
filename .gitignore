@@ -8,3 +8,7 @@ env
 
 # PyCache
 __pycache__
+
+# Documentation files
+*.txt
+*.pdf
