@@ -4,8 +4,30 @@ from utils.utils import display_pdf
 
 @st.dialog(" ", width="small")
 def welcomeDialogue():
-    st.header("LangGraph AI Agent -- :red[Gemini]", text_alignment="center")
-    st.write(f"Why is your favorite?")
+    st.header("LangGraph :red[Search Agent]", text_alignment="center")
+    st.write("Let AI Agents do the searching for you. Simply prompt to get started.")
+    with st.container(border=True):
+        st.write(
+            ":gray[A stateful, graph-based AI Agent for doing web search. Build with LangGraph, and integrations from Gemini & DuckDuckGo.]"
+        )
+    st.write("")
+    callAction1, callAction2 = st.columns([4, 3])
+    if callAction1.button(
+        "**:red[Get Started]**",
+        # icon=":material/chevron_right:",
+        icon_position="right",
+        use_container_width=True,
+        # width="stretch",
+    ):
+        st.rerun()
+    with callAction2:
+        if st.button(
+            "**:green[See Docs]**",
+            icon=":material/open_in_new:",
+            icon_position="right",
+            use_container_width=True,
+        ):
+            st.switch_page("pages/Doc.py")
 
 
 # User prompt input with file uploads (image/PDF) & audio recordings

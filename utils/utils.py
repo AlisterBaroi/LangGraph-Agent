@@ -7,11 +7,20 @@ from dotenv import load_dotenv
 @st.cache_data
 def checkAPIKey(streamlit: bool) -> str:
     load_dotenv()  # Load variables from .env
+
     if not os.environ.get("GOOGLE_API_KEY"):  # Check if API key exists
-        exc = "GOOGLE_API_KEY Missing -> Please add GOOGLE_API_KEY for Gemini at './.env' file."
-        print(exc)
-        return st.write(Exception(exc)) if streamlit else exit()
-    print("GOOGLE_API_KEY verified!")
+        excG = "GOOGLE_API_KEY Missing -> Please add GOOGLE_API_KEY for Gemini at './.env' file."
+        print(excG)
+        return st.write(Exception(excG)) if streamlit else exit()
+    print("GOOGLE_API_KEY: Verified!")
+
+    if not os.environ.get("MODEL_NAME"):  # Check if Model is set
+        excM = (
+            "MODEL_NAME Missing -> Please specify Gemini MODEL_NAME at './.env' file."
+        )
+        print(excM)
+        return st.write(Exception(excM)) if streamlit else exit()
+    print("GEMINI MODEL: Set!")
 
 
 # Display a PDF in an HTML iframe.

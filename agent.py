@@ -6,27 +6,6 @@
 # from langgraph.graph.message import add_messages
 # from langgraph.prebuilt import ToolNode
 
-# # Check Gemini API Key
-# checkAPIKey()
-
-
-# # 1 Defining tools. Test: A weather tool for agent to call ==
-# @tool
-# def get_weather(city: str):
-#     # Weather API here for real app.
-#     """Get the current weather for a specific city."""
-#     return f"The weather in {city} is sunny and 25°C."
-
-
-# # Create list of all tools
-# tools = [get_weather]
-
-
-# # 2 Define state: Track conversation history ==
-# class AgentState(TypedDict):
-#     # Auto-appends new messages to history
-#     messages: Annotated[list, add_messages]
-
 
 # # 3 Init model: Binding tools to model so it knows their existance ==
 # llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
@@ -84,7 +63,7 @@
 # print(f"Agent: {final_state['messages'][-1].content}")
 
 from utils.utils import checkAPIKey
-from typing import Annotated, Literal, TypedDict
+from typing import Annotated, TypedDict
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import tool
 from langchain_core.messages import SystemMessage
@@ -92,10 +71,15 @@ from ddgs import DDGS
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
-import datetime
+import os, datetime
 
-# Check Gemini API Key
+# For colors: https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
+from rich.console import Console
+from rich.panel import Panel
+
+# Check Gemini API Key (& rich text init for terminal)
 checkAPIKey(streamlit=False)
+console = Console()
 
 
 # --- 1. Define Tools ---
@@ -105,7 +89,7 @@ def web_search(query: str):
     Finds information on the internet.
     Useful for doing web search to get recent/real-time information.
     """
-    print(f"\n--- [TOOL CALL] Web Search Query: '{query}' ---")
+    console.print(f"--- [TOOL CALL]->Web Search Query: '{query}'", style="blue")
 
     try:
         # Using the direct DDGS library
@@ -119,18 +103,19 @@ def web_search(query: str):
                 title = res.get("title", "No Title")
                 body = res.get("body", res.get("snippet", "No Content"))
                 link = res.get("href", res.get("url", "No Link"))
-
                 result_str += f"Result {i}: {title}\n{body}\nSource: {link}\n\n"
+            console.print(
+                f"--- [TOOL RESULT]: Found {len(results)} results.", style="blue"
+            )
 
-            print(f"--- [TOOL RESULT] Found {len(results)} results. ---")
             return result_str
         else:
-            print("--- [TOOL RESULT] No results found. ---")
+            console.print("--- [TOOL RESULT]: No results found.", style="orange_red1")
             return "No search results found."
 
     except Exception as e:
         error_msg = f"Error performing search: {str(e)}"
-        print(f"--- [TOOL ERROR] {error_msg} ---")
+        console.print(f"--- [TOOL ERROR]: {error_msg}", style="bright_red")
         return error_msg
 
 
@@ -144,7 +129,7 @@ class AgentState(TypedDict):
 
 
 # --- 3. Initialize Model ---
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+llm = ChatGoogleGenerativeAI(model=os.environ.get("MODEL_NAME"))
 llm_with_tools = llm.bind_tools(tools)
 
 # --- 4. Define Nodes ---
@@ -155,7 +140,8 @@ def chatbot(state: AgentState):
     last_msg = state["messages"][-1]
     user_text = last_msg.content if hasattr(last_msg, "content") else str(last_msg)
 
-    print(f"\n--- [AGENT NODE] Processing Input: {user_text[:100]}... ---")
+    console.print(f"\n--- [AGENT NODE]->Processing Input:", style="chartreuse2")
+    print(f"`\n{user_text}\n`")
 
     # --- DYNAMIC SYSTEM PROMPT ---
     # We create the system message INSIDE the node so it always has the exact current time.
@@ -177,7 +163,6 @@ def chatbot(state: AgentState):
     # Prepend the system message to the conversation history
     # This ensures the model sees the date immediately.
     messages = [sys_msg] + state["messages"]
-
     response = llm_with_tools.invoke(messages)
 
     # Parse content blocks if response is a list
@@ -193,26 +178,38 @@ def chatbot(state: AgentState):
         )
         response.content = log_content
 
-    # print(f"--- [AGENT NODE] LLM Response: {response.content[:100]}... ---")
-    print(f"--- [AGENT NODE] LLM Response: {response.content} ---")
+    # Conditional terminal print statements
+    if response.content == "":
+        console.print(f"--- [AGENT NODE]->LLM Response:", style="chartreuse2")
+    else:
+        console.print(f"--- [AGENT NODE]->LLM Response:", style="chartreuse2")
+        print(f"`\n{response.content}\n`")
+
     if response.tool_calls:
-        print(
-            f"--- [AGENT NODE] Agent decided to call tool: {response.tool_calls[0]['name']} ---"
+        console.print(
+            f"--- [AGENT NODE]->Agent decided to call tool: {response.tool_calls[0]['name']}",
+            style="chartreuse2",
         )
 
     return {"messages": [response]}
 
 
-def should_continue(state: AgentState) -> Literal["tools", END]:
+def should_continue(state: AgentState) -> str:
     """Router to decide if we need to call a tool or end the conversation."""
     messages = state["messages"]
     last_message = messages[-1]
 
     if last_message.tool_calls:
-        print("--- [ROUTER] Decision: CONTINUE to 'tools' node ---")
+        console.print(
+            "--- [ROUTER]->Decision: CONTINUE to 'tools' node",
+            style="light_cyan1",
+        )
         return "tools"
 
-    print("--- [ROUTER] Decision: STOP (END) ---")
+    console.print(
+        "--- [ROUTER]->Decision: STOP (END) ⛔",
+        style="light_cyan1",
+    )
     return END
 
 

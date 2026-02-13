@@ -1,8 +1,9 @@
 import uuid
 import streamlit as st
-from utils.utils import checkAPIKey
-from components.components import promptFunc
+from components.components import promptFunc, welcomeDialogue
 from agent import app  # Import the compiled graph
+
+# from utils.utils import checkAPIKey
 
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = str(uuid.uuid4())
@@ -10,17 +11,20 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "reject_mode" not in st.session_state:
     st.session_state.reject_mode = False
-
+# if not st.session_state.dialogue_shown:
+#     welcomeDialogue()
+#     st.session_state.dialogue_shown = True
+if "dialogue_shown" not in st.session_state:
+    welcomeDialogue()
+    st.session_state.dialogue_shown = True
 config = {"configurable": {"thread_id": st.session_state.thread_id}}
 
 # Verify Gemini API key
-checkAPIKey(streamlit=True)
+# checkAPIKey(streamlit=True)
 
 # Page Settings & title
-st.set_page_config(page_title="LangGraph AI Agent", page_icon="🤖", layout="centered")
-st.subheader(
-    "LangGraph AI Agent -- :red[Gemini]", anchor=False, text_alignment="center"
-)
+st.set_page_config(page_title="LangGraph SA", page_icon="🤖", layout="centered")
+st.subheader("LangGraph :red[Search Agent]", anchor=False, text_alignment="center")
 st.write(
     "I'm a :red[Web Search Agent]. I can use search to find information for you. Ask me to web search on any topic."
 )
