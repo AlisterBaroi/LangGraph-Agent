@@ -27,7 +27,7 @@ def welcomeDialogue():
             icon_position="right",
             use_container_width=True,
         ):
-            st.switch_page("pages/Doc.py")
+            st.switch_page("pages/Docs.py")
 
 
 # User prompt input with file uploads (image/PDF) & audio recordings
