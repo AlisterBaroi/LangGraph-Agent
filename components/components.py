@@ -2,13 +2,9 @@ import streamlit as st
 from utils.utils import display_pdf
 
 
+# User prompt input with file uploads (image/PDF) & audio recordings
 def promptFunc():
-    # prompt = st.chat_input("Say something")
-
-    # if prompt:
-    #     st.write(f"User has sent the following prompt: {prompt}")
-
-    prompt = st.chat_input(
+    prompt = st.chat_input(  # init prompt UI
         "Say something and/or attach an image/pdf file or audio recording",
         accept_file="multiple",
         file_type=["jpg", "jpeg", "png", "pdf"],
@@ -21,32 +17,21 @@ def promptFunc():
             "files": prompt.files,  # List of UploadedFile objects
             "audio": prompt.audio,  # Single UploadedFile object or None
         }
-
-        # 2. Display the user's inputs immediately in the chat UI
+        # 2. Display user inputs immediately in chat UI
         with st.chat_message("user"):
-
-            # Display text if present
-            if prompt.text:
+            if prompt.text:  # Display text if present
                 st.write(prompt.text)
-
-            # Display audio if present
-            if prompt.audio:
+            if prompt.audio:  # Display audio if present
                 st.audio(prompt.audio)
                 st.caption("🎤 Audio recorded")
-
-            # Display files if present
-            if prompt.files:
+            if prompt.files:  # Display files if present
                 for file in prompt.files:
                     file_type = file.type
-                    # Image logic
-                    if file_type.startswith("image/"):
+                    if file_type.startswith("image/"):  # Image logic
                         st.image(file, caption=file.name, width=300)
-                    # PDF logic
-                    elif file_type == "application/pdf":
-                        st.write(f"***:green[{file.name}]***")
+                    elif file_type == "application/pdf":  # PDF logic
+                        st.write(f"📄 ***:green[{file.name}]***")
                         display_pdf(file)
-
-        # 3. Return the payload so app.py can pass it to the agent
+        # 3. Return payload so app.py can pass it to agent
         return user_message
-
     return None
