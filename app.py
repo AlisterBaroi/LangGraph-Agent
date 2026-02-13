@@ -1,8 +1,9 @@
 import uuid
 import streamlit as st
-from utils.utils import checkAPIKey
 from components.components import promptFunc
 from agent import app  # Import the compiled graph
+
+# from utils.utils import checkAPIKey
 
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = str(uuid.uuid4())
