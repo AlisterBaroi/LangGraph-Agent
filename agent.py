@@ -1,12 +1,13 @@
 import os
 import operator
 import requests
+import time
 from typing import Annotated, TypedDict, List, Literal
 from bs4 import BeautifulSoup
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools import DuckDuckGoSearchRun
-from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
+from langchain_core.messages import AIMessage, SystemMessage, HumanMessage, BaseMessage
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 from dotenv import load_dotenv
@@ -20,140 +21,156 @@ console = Console()
 if not os.environ.get("GOOGLE_API_KEY"):
     raise ValueError("GOOGLE_API_KEY is missing from .env file")
 
-# We use a slightly higher temperature for drafting to be creative,
-# but low for routing/critique to be precise.
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
+# High creativity for drafting
+llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.4)
+# Zero temp for logic/routing
+llm_logic = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0)
+
 search_tool = DuckDuckGoSearchRun()
 
 
 # --- STATE DEFINITION ---
 class AgentState(TypedDict):
-    query: str  # User's raw input
-    intent: str  # 'chat', 'research_report', 'site_scrape'
-    target_url: str  # If intent is scrape
-    research_data: str  # Raw text from search/scrape
-    draft_content: str  # The generated report
-    critique_feedback: str  # Internal AI critique
-    compliance_issues: List[str]  # Guardrail flags
-    human_feedback: str  # User feedback
-    iteration_count: int  # To prevent infinite critique loops
-    messages: Annotated[List, operator.add]  # Chat history
+    query: str
+    intent: str
+    target_url: str
+    research_data: str
+    draft_content: str
+    critique_feedback: str
+    compliance_issues: List[str]
+    human_feedback: str
+    iteration_count: int
+    messages: Annotated[List[BaseMessage], operator.add]
 
 
 # --- HELPERS ---
 def log_step(title, content, style="bold blue"):
-    """Pretty prints logs to terminal"""
     console.print(Panel(str(content), title=title, border_style=style))
 
 
 # --- NODES ---
 
 
+def node_parse_input(state: AgentState):
+    if not state["messages"] or not isinstance(state["messages"][-1], HumanMessage):
+        return {"messages": [HumanMessage(content=state["query"])]}
+    return {}
+
+
 def node_guard_input(state: AgentState):
     query = state["query"]
     log_step("PHASE 1: INPUT GUARDRAIL", f"Scanning: {query}")
-
     banned = ["explosives", "illegal", "dark web"]
     if any(word in query.lower() for word in banned):
-        log_step("GUARDRAIL ALERT", "Banned topic detected!", "bold red")
         return {"compliance_issues": ["Policy Violation"]}
-
     return {"compliance_issues": [], "iteration_count": 0}
 
 
 def node_router(state: AgentState):
-    query = state["query"].lower()
-    log_step("PHASE 2: ROUTER", f"Analyzing Intent for: {query}")
+    query = state["query"]
+    log_step("PHASE 2: ROUTER", f"Analyzing: {query}")
 
-    # 1. Check for URL Scraping
     if "http" in query and ("scrape" in query or "read" in query):
-        # Extract URL (simple logic)
         url = [w for w in query.split() if w.startswith("http")][0]
-        log_step("ROUTING", f"Intent: Site Scrape | Target: {url}", "green")
         return {"intent": "site_scrape", "target_url": url}
 
-    # 2. Check for Report/Research
-    keywords = ["report", "research", "summary", "document", "deep dive", "investigate"]
-    if any(k in query for k in keywords):
+    # Enhanced Classification Prompt
+    prompt = f"""
+    Classify the user intent. Return ONLY the category name.
+    
+    1. 'quick_search': User wants a specific fact, number, date, or status. 
+       Examples: "What is NVDA price?", "Who is the CEO of Google?", "Weather in London".
+    
+    2. 'research_report': User wants a deep dive, summary, document, or analysis.
+       Examples: "Write a report on AI", "Summarize this topic", "Deep dive into NVDA".
+       
+    3. 'chat': Casual conversation.
+    
+    User Query: "{query}"
+    """
+    intent = llm_logic.invoke(prompt).content.strip().lower()
+
+    if "quick" in intent or "search" in intent:
+        log_step("ROUTING", "Intent: Quick Search", "cyan")
+        return {"intent": "quick_search"}
+    elif "report" in intent or "research" in intent:
         log_step("ROUTING", "Intent: Research Report", "green")
         return {"intent": "research_report"}
 
-    # 3. Default: Chat
     log_step("ROUTING", "Intent: Casual Chat", "yellow")
     return {"intent": "chat"}
 
 
 def node_simple_chat(state: AgentState):
-    """Handles normal conversation without heavy tools."""
-    response = llm.invoke(state["query"])
+    log_step("PHASE 3: CHAT", "Generating response...")
+    messages = state["messages"]
+    response = llm.invoke(messages)
     return {"messages": [response]}
 
 
 def node_web_research(state: AgentState):
     query = state["query"]
-    log_step("PHASE 3: RESEARCHER", f"Generating search queries for: {query}")
+    log_step("PHASE 3: RESEARCHER", f"Query: {query}")
 
-    # Optimize query
-    search_query = llm.invoke(
-        f"Turn this into a perfect DuckDuckGo search query: {query}"
-    ).content.strip()
+    search_query = (
+        llm_logic.invoke(f"Create a specific DuckDuckGo search query for: {query}")
+        .content.strip()
+        .replace('"', "")
+    )
     log_step("SEARCHING", f"Query: {search_query}")
 
     try:
-        # Actual Tool Call
         res = search_tool.invoke(search_query)
-        log_step("SEARCH RESULTS", f"Retrieved {len(res)} characters", "cyan")
+        log_step("SEARCH SUCCESS", f"Retrieved {len(res)} chars", "cyan")
     except Exception as e:
-        res = f"Search Error: {e}"
-        log_step("SEARCH ERROR", str(e), "bold red")
-
+        res = f"Search Failed: {e}"
     return {"research_data": res}
 
 
 def node_url_scraper(state: AgentState):
     url = state.get("target_url")
     log_step("PHASE 3: SCRAPER", f"Scraping: {url}")
-
     try:
-        # Basic recursive-ish simulation (Single page for stability in demo)
-        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         soup = BeautifulSoup(resp.content, "html.parser")
-
-        # Strip script/style
         for script in soup(["script", "style"]):
             script.extract()
-
-        text = soup.get_text()[:10000]  # Limit to 10k chars for context window
-        log_step("SCRAPE SUCCESS", f"Extracted {len(text)} clean characters", "cyan")
+        text = soup.get_text()[:8000]
         return {"research_data": f"Source: {url}\nContent: {text}"}
     except Exception as e:
         return {"research_data": f"Failed to scrape {url}: {str(e)}"}
 
 
 def node_generator(state: AgentState):
-    log_step("PHASE 4: DRAFTER", "Writing content...")
+    log_step("PHASE 4: GENERATOR", "Writing content...")
     context = state.get("research_data", "")
-    critique = state.get("critique_feedback", "")
-    user_notes = state.get("human_feedback", "")
+    feedback = state.get("human_feedback", "")
+    intent = state.get("intent", "research_report")
+
+    # DYNAMIC PROMPT SELECTION
+    if feedback:
+        log_step("REVISION", f"Applying user feedback: {feedback}", "bold magenta")
+        system_instruction = f"""
+        CRITICAL INSTRUCTION: You are revising a previous output. 
+        The user REJECTED the last draft. 
+        You MUST incorporate this feedback: "{feedback}"
+        Do not ignore this. Change the tone, length, or content as requested.
+        """
+    elif intent == "quick_search":
+        system_instruction = "You are a helpful assistant. Answer the user's question directly and concisely based on the context. Do NOT write a full report with headers."
+    else:
+        system_instruction = "You are an Enterprise AI Analyst. Write a detailed Markdown report with headers (Executive Summary, Key Findings, etc)."
 
     prompt = f"""
-    You are an Enterprise AI Writer. 
-    Task: Write a detailed Markdown report answering: "{state['query']}"
+    {system_instruction}
+    
+    User Query: "{state['query']}"
     
     Context Data:
     {context}
-    
-    Internal Critique to Address: {critique}
-    User Feedback to Address: {user_notes}
-    
-    Requirements:
-    - Use clear H2 and H3 headers.
-    - If data is missing, state it clearly.
-    - Professional tone.
     """
 
     response = llm.invoke(prompt)
-    log_step("DRAFT GENERATED", response.content[:200] + "...", "magenta")
     return {
         "draft_content": response.content,
         "iteration_count": state["iteration_count"] + 1,
@@ -161,43 +178,33 @@ def node_generator(state: AgentState):
 
 
 def node_critique(state: AgentState):
-    log_step("PHASE 5: INTERNAL CRITIQUE", "Reviewing draft quality...")
+    # Skip critique for quick searches or if user already gave feedback
+    if state.get("intent") == "quick_search" or state.get("human_feedback"):
+        return {"critique_feedback": "None"}
+
+    log_step("PHASE 5: CRITIQUE", "Reviewing...")
     draft = state["draft_content"]
+    eval_prompt = f"Review this report for the query '{state['query']}'. If good, say PERFECT. Else give 1 sentence fix."
+    feedback = llm_logic.invoke(eval_prompt).content.strip()
 
-    # Ask LLM to review the draft
-    eval_prompt = f"""
-    Review this draft for quality, accuracy, and completeness based on the user query: "{state['query']}"
-    
-    Draft:
-    {draft[:4000]}
-    
-    If the draft is good, reply 'PERFECT'.
-    If it needs work, provide specific 1-sentence instructions on what to fix.
-    """
-
-    feedback = llm.invoke(eval_prompt).content.strip()
-
-    if "PERFECT" in feedback or state["iteration_count"] > 2:
-        log_step("CRITIQUE RESULT", "Draft Approved ✅", "green")
-        return {"critique_feedback": "None"}  # Pass
+    if "PERFECT" in feedback or state["iteration_count"] > 1:
+        log_step("CRITIQUE", "Approved ✅", "green")
+        return {"critique_feedback": "None"}
     else:
-        log_step("CRITIQUE RESULT", f"Needs Revision: {feedback}", "yellow")
-        return {"critique_feedback": feedback}  # Loop back
+        log_step("CRITIQUE", f"Revision needed: {feedback}", "yellow")
+        return {"critique_feedback": feedback}
 
 
 def node_guard_output(state: AgentState):
-    log_step("PHASE 6: OUTPUT GUARD", "Checking PII/Tone...")
-    # (Same logic as before)
     return {"compliance_issues": []}
 
 
 def node_human_review(state: AgentState):
-    log_step("PHASE 7: HUMAN REVIEW", "Pausing for user input...", "bold purple")
+    log_step("PHASE 7: HUMAN REVIEW", "Waiting for approval...", "bold purple")
     pass
 
 
 def node_finalize(state: AgentState):
-    log_step("PHASE 8: FINALIZE", "Delivering output.")
     return {"messages": [AIMessage(content=state["draft_content"])]}
 
 
@@ -209,19 +216,20 @@ def route_start(state):
         return "chat"
     if state["intent"] == "site_scrape":
         return "scrape"
+    # Both quick_search and research_report go to research first
     return "research"
 
 
 def check_critique(state):
-    # Loop back if critique has feedback, otherwise proceed
     if state["critique_feedback"] != "None":
         return "retry"
     return "proceed"
 
 
-# --- GRAPH BUILD ---
+# --- GRAPH ---
 workflow = StateGraph(AgentState)
 
+workflow.add_node("parse_input", node_parse_input)
 workflow.add_node("guard_input", node_guard_input)
 workflow.add_node("simple_chat", node_simple_chat)
 workflow.add_node("web_research", node_web_research)
@@ -233,35 +241,28 @@ workflow.add_node("human_review", node_human_review)
 workflow.add_node("finalize", node_finalize)
 workflow.add_node("router", node_router)
 
-# Entry
-workflow.add_edge(START, "guard_input")
+workflow.add_edge(START, "parse_input")
+workflow.add_edge("parse_input", "guard_input")
 workflow.add_edge("guard_input", "router")
 
-# Router Logic
 workflow.add_conditional_edges(
     "router",
     route_start,
     {
-        "block": END,  # Or block node
+        "block": END,
         "chat": "simple_chat",
         "scrape": "url_scraper",
         "research": "web_research",
     },
 )
 
-# Chat path
 workflow.add_edge("simple_chat", END)
-
-# Research/Scrape path
 workflow.add_edge("web_research", "generator")
 workflow.add_edge("url_scraper", "generator")
-
-# Critique Loop
 workflow.add_edge("generator", "critique")
 workflow.add_conditional_edges(
     "critique", check_critique, {"retry": "generator", "proceed": "guard_output"}
 )
-
 workflow.add_edge("guard_output", "human_review")
 workflow.add_edge("human_review", "finalize")
 workflow.add_edge("finalize", END)
