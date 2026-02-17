@@ -12,9 +12,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "reject_mode" not in st.session_state:
     st.session_state.reject_mode = False
-# if not st.session_state.dialogue_shown:
-#     welcomeDialogue()
-#     st.session_state.dialogue_shown = True
 if "dialogue_shown" not in st.session_state:
     welcomeDialogue()
     st.session_state.dialogue_shown = True
