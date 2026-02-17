@@ -1,4 +1,4 @@
-import os, base64
+import os, base64, time
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -31,3 +31,10 @@ def display_pdf(file):
     # Create the HTML iframe (width/height control the viewer size)
     pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
     st.markdown(pdf_display, unsafe_allow_html=True)  # Render the HTML
+
+
+# Simulate streaming text output
+def stream_text(text):
+    for word in text.split(" "):
+        yield word + " "
+        time.sleep(0.005)
