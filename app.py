@@ -67,6 +67,13 @@ def main():
 
                 # Get the final response
                 agent_response = final_state["messages"][-1].content
+
+                # Testing display of full message history returned by agent
+                # st.divider()
+                # st.write("--- [DEBUG] Full Message History from Agent ---")
+                # st.write(st.session_state.messages)
+                # st.divider()
+
                 st.write_stream(stream_text(agent_response))
 
         # Add agent response to history
