@@ -1,6 +1,7 @@
 import uuid
 import streamlit as st
 from components.components import promptFunc, welcomeDialogue
+from utils.utils import stream_text
 from agent import app  # Import the compiled graph
 
 # from utils.utils import checkAPIKey
@@ -11,9 +12,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "reject_mode" not in st.session_state:
     st.session_state.reject_mode = False
-# if not st.session_state.dialogue_shown:
-#     welcomeDialogue()
-#     st.session_state.dialogue_shown = True
 if "dialogue_shown" not in st.session_state:
     welcomeDialogue()
     st.session_state.dialogue_shown = True
@@ -66,7 +64,14 @@ def main():
 
                 # Get the final response
                 agent_response = final_state["messages"][-1].content
-                st.write(agent_response)
+
+                # Testing display of full message history returned by agent
+                # st.divider()
+                # st.write("--- [DEBUG] Full Message History from Agent ---")
+                # st.write(st.session_state.messages)
+                # st.divider()
+
+                st.write_stream(stream_text(agent_response))
 
         # Add agent response to history
         st.session_state.messages.append(("assistant", agent_response))

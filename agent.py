@@ -62,20 +62,24 @@
 # final_state = app.invoke({"messages": [("user", "What is the weather in London?")]})
 # print(f"Agent: {final_state['messages'][-1].content}")
 
+
+# from typing import Annotated, TypedDict
+# from langchain_core.messages import SystemMessage
+# from rich.panel import Panel
 from utils.utils import checkAPIKey
-from typing import Annotated, TypedDict
+from typing import Annotated, TypedDict, Union
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import tool
-from langchain_core.messages import SystemMessage
-from ddgs import DDGS
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
+from ddgs import DDGS
 import os, datetime
+from rich.console import Console
 
 # For colors: https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
-from rich.console import Console
-from rich.panel import Panel
+
 
 # Check Gemini API Key (& rich text init for terminal)
 checkAPIKey(streamlit=False)
@@ -125,7 +129,10 @@ tools = [web_search]
 
 # --- 2. Define State ---
 class AgentState(TypedDict):
-    messages: Annotated[list, add_messages]
+    messages: Annotated[
+        list[Union[HumanMessage, AIMessage, SystemMessage]], add_messages
+    ]
+    # messages: Annotated[list, add_messages]
 
 
 # --- 3. Initialize Model ---
@@ -149,12 +156,12 @@ def chatbot(state: AgentState):
 
     sys_msg = SystemMessage(
         content=f"""
-        You are a professional research assistant acting as a specialized search engine (when queried/intented by the users prompt to do web search, else just be a casual chat). Your goal is to provide deeply researched, structured answers in plain text.
+        You are "LangGraph Search Agent", a professional research assistant (made by Tigera Inc.) acting as a specialized search engine (when queried/intented by the users prompt to do web search, else just be a casual, professional chat). Your goal is to provide deeply researched, structured answers in plain text.
         1. Analyze the user query and identify key entities and concepts.
         2. Execute multiple searches to gather diverse perspectives on the topic.
         3. Synthesize the findings into a structured report: Summary, Key Findings, Detailed Analysis, and Conclusion.
         4. If information is conflicting, note the discrepancy and the different sources.
-        5. Always use citation markers (e.g. [link here]) to reference findings (with links), do not hallucinate.
+        5. Always use citation markers (e.g. [link here]) to reference findings (with specific links/urls), do not hallucinate.
         
         Current Date and Time (for reference): {current_time}
         """
